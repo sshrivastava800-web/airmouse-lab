@@ -6,10 +6,9 @@
 
 **Project:** AirMouse Lab — Webcam Gesture-Controlled Desktop Mouse
 
-- [LinkedIn](https://www.linkedin.com/in/s800live/)
 - [GitHub](https://github.com/sshrivastava800-web)
 
-AirMouse Lab is a personal human–computer interaction experiment led by **Sameer Shrivastava**.
+AirMouse Lab is a webcam-driven human–computer interaction project maintained by **Sameer Shrivastava**.
 
 The initial implementation and documentation were created with **AI assistance**. Automated gesture-engine tests have passed locally; real-world webcam behavior has not yet been independently verified.
 
