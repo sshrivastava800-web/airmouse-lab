@@ -1,8 +1,8 @@
 # AirMouse Lab 🖐️
 
-**Created by Sameer Shrivastava** · Independent Technology & Human–Computer Interaction Experiments
+**Maintained by Sameer Shrivastava**
 
-**[Creator credits](AUTHORS.md) · [LinkedIn](https://www.linkedin.com/in/s800live/) · [GitHub](https://github.com/sshrivastava800-web)**
+**[Author](AUTHORS.md) · [GitHub](https://github.com/sshrivastava800-web)**
 
 An experimental, privacy-first, webcam-controlled desktop mouse built with Python, OpenCV, MediaPipe, and PyAutoGUI. Control the cursor with an index finger, pinch to click, and scroll with two raised fingers.
 
@@ -60,7 +60,3 @@ Twelve unit tests exercise gesture classification, click cooldown, dwell timing,
 ## Author and attribution
 
 **Sameer Shrivastava** — Project creator, concept lead, and maintainer. The initial implementation and documentation were produced with AI assistance. See **[AUTHORS.md](AUTHORS.md)** and **[MIT License](LICENSE)**.
-
-## LinkedIn showcase
-
-See **[SHOWCASE.md](SHOWCASE.md)** for a project description, suggested skills, and a demonstration checklist.
