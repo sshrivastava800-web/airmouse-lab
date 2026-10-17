@@ -20,26 +20,33 @@ An experimental, privacy-first, webcam-controlled desktop mouse built with Pytho
 - **Adaptive cursor smoothing:** limits small hand jitter while responding to larger movement.
 - **Privacy:** camera frames are processed locally in memory. No uploads, tracking, or saved recordings.
 
-## Run on Windows
+## Run on Windows (Python 3.15)
 
-1. Install **Python 3.11**, enabling the **Add Python to PATH** option.
-2. Clone this repository or download and extract its ZIP from the green Code menu.
-3. Double-click **run_windows.bat** to set up dependencies and launch the preview.
-4. Allow webcam access. Press **P** in the preview window to enable mouse control.
-5. Press **P** to pause; **Q** or **Esc** to exit.
+1. Install the latest **64-bit Python 3.15** from [python.org](https://www.python.org/downloads/). Enable the Python launcher / Add Python to PATH when offered.
+2. Download this repository using **Code → Download ZIP**, then extract it. If you have an older copy, download a fresh ZIP to obtain the updated files.
+3. Double-click **run_windows.bat**. It selects Python 3.15, creates a private `.venv`, updates pip, installs dependencies, and starts the camera preview.
+4. On the **first** run, the official [MediaPipe Hand Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker) model downloads once over HTTPS to your user cache. Subsequent runs can be offline.
+5. Allow Windows camera access. Focus the preview and press **P** to arm the pointer. Press **P** to lock, **Q** or **Esc** to quit.
 
-Alternatively, open a terminal in the project folder and run:
+Alternatively, in Command Prompt inside the project folder:
 
-    py -3.11 -m venv .venv
-    .venv\Scripts\activate
-    python -m pip install -r requirements.txt
-    python -m airmouse
+```bat
+py -3.15 -m venv .venv
+.venv\Scripts\python.exe -m pip install --upgrade pip
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m airmouse
+```
 
-Optional camera selection: **python -m airmouse --camera 1**. Other flags: **--no-mirror**, **--dwell**.
+For a different camera: `python -m airmouse --camera 1` (run in an activated venv or use `.venv\Scripts\python.exe`).
+Other flags: `--no-mirror`, `--dwell`, `--model C:\\path\\to\\hand_landmarker.task` for offline/custom model use.
+
+**Upgrading from Python 3.11:** the Windows launcher automatically replaces an old project-specific `.venv` so old binary packages do not break the new interpreter. Do not copy an old `.venv` into the new download.
+
+**Compatibility:** the code now uses the MediaPipe **Tasks Hand Landmarker** API rather than the removed `mp.solutions` API. The GitHub Actions matrix runs pure-unit tests on 3.13–3.15 and checks Windows dependency installation on 3.14–3.15. Automated checks do not replace a real webcam test. If package installation fails on a newly released interpreter, check CI and the error message before attempting to downgrade.
 
 ## Technology
 
-Webcam/OpenCV → 21 hand landmarks/MediaPipe → gesture state machine and smoothing → PyAutoGUI cursor control → OpenCV preview/HUD.
+Webcam/OpenCV → MediaPipe Tasks Hand Landmarker (21 landmarks) → gesture state machine and smoothing → PyAutoGUI cursor control → OpenCV preview/HUD.
 
 The logic in **airmouse/core.py** has no webcam or GUI dependencies and can be tested separately.
 
@@ -47,7 +54,7 @@ The logic in **airmouse/core.py** has no webcam or GUI dependencies and can be t
 
     python -m unittest discover -s tests -v
 
-Twelve unit tests exercise gesture classification, click cooldown, dwell timing, and pointer smoothing. The GitHub Actions workflow runs these checks on commits and pull requests.
+Twelve original unit tests exercise gesture classification, click cooldown, dwell timing, and pointer smoothing. New adapter tests verify Tasks landmark conversion, strictly increasing video timestamps, and offline model selection. GitHub Actions checks these on commits and pull requests.
 
 ## Safety
 
@@ -55,6 +62,7 @@ Twelve unit tests exercise gesture classification, click cooldown, dwell timing,
 - PyAutoGUI's upper-left screen-corner fail-safe remains enabled.
 - Keep the camera preview accessible, and do not use this prototype for safety-critical work.
 - Camera recognition and gestures can be imperfect depending on lighting, hand pose, and camera angle.
+- The first launch downloads only the public hand-landmarker model; webcam images stay local in memory and are not uploaded.
 - Keyboard shortcuts require focus on the camera preview window.
 
 ## Author and attribution
