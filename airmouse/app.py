@@ -9,8 +9,10 @@ import math
 import platform
 import sys
 import time
+from pathlib import Path
 
-from .core import AdaptiveSmoother, ClickLatch, DwellClick, Gesture, Point, map_pointer, recognize
+from .core import AdaptiveSmoother, ClickLatch, DwellClick, Gesture, map_pointer, recognize
+from .tracking import HandTracker, draw_hand, ensure_model
 
 
 def imports():
@@ -20,8 +22,8 @@ def imports():
         import pyautogui
     except ImportError as exc:
         raise SystemExit("Missing dependency. Install with: python -m pip install -r requirements.txt") from exc
-    if not hasattr(mp, "solutions"):
-        raise SystemExit("This project requires MediaPipe 0.10.21 (legacy hand-tracking API). Install requirements.txt with Python 3.11.")
+    if not hasattr(mp, "tasks"):
+        raise SystemExit("This project requires the modern MediaPipe Tasks API. Reinstall requirements.txt.")
     return cv2, mp, pyautogui
 
 
@@ -80,8 +82,13 @@ def main(argv=None) -> int:
     parser.add_argument("--camera", type=int, default=0, help="Camera index (default: 0)")
     parser.add_argument("--no-mirror", action="store_true", help="Disable mirrored selfie-view")
     parser.add_argument("--dwell", action="store_true", help="Enable optional dwell-to-click mode")
+    parser.add_argument("--model", type=Path, help="Use a locally downloaded MediaPipe hand_landmarker.task file")
     args = parser.parse_args(argv)
     cv2, mp, pyautogui = imports()
+    try:
+        model_path = ensure_model(args.model)
+    except RuntimeError as exc:
+        raise SystemExit(str(exc)) from exc
     pyautogui.FAILSAFE = True
     pyautogui.PAUSE = 0
     try:
@@ -112,9 +119,7 @@ def main(argv=None) -> int:
 
     print("AirMouse Lab ready. Press P in the camera window to enable cursor control; Q to quit.")
     try:
-        with mp.solutions.hands.Hands(static_image_mode=False, max_num_hands=1,
-                                      model_complexity=1, min_detection_confidence=0.65,
-                                      min_tracking_confidence=0.6) as hands:
+        with HandTracker(mp, model_path) as hands:
             while True:
                 ok, frame = cam.read()
                 if not ok:
@@ -129,23 +134,14 @@ def main(argv=None) -> int:
                 previous_frame_time = now
 
                 rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                rgb.flags.writeable = False
-                detected = hands.process(rgb)
-                rgb.flags.writeable = True
-                points = None
+                points = hands.process(rgb, int(now * 1000))
                 gesture_text = "NO HAND"
                 progress = 0.0
-                if detected.multi_hand_landmarks:
-                    hand = detected.multi_hand_landmarks[0]
-                    points = [Point(p.x, p.y) for p in hand.landmark]
+                if points is not None:
                     reading = recognize(points)
                     gesture_text = reading.gesture.value
                     last_tracking_time = now
-                    mp.solutions.drawing_utils.draw_landmarks(
-                        frame, hand, mp.solutions.hands.HAND_CONNECTIONS,
-                        mp.solutions.drawing_styles.get_default_hand_landmarks_style(),
-                        mp.solutions.drawing_styles.get_default_hand_connections_style(),
-                    )
+                    draw_hand(cv2, frame, points)
                     if armed:
                         event = click_latch.consume(reading.gesture, now)
                         if reading.gesture in (Gesture.MOVE, Gesture.LEFT, Gesture.RIGHT):
