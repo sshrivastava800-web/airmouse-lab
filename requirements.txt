@@ -1,3 +1,4 @@
-mediapipe==0.10.21
-opencv-python>=4.8,<5
+# Current MediaPipe Tasks API, targeting CPython 3.15.
+mediapipe>=1.1.1,<2
+opencv-python>=4.12,<6
 pyautogui>=0.9.54,<1
