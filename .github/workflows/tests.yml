@@ -1,19 +1,43 @@
-name: Test gesture engine
+name: AirMouse compatibility checks
 on:
   push:
   pull_request:
+
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.13', '3.14', '3.15']
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
       - name: Compile source
         run: python -m compileall -q airmouse
-      - name: Run unit tests (no webcam required)
+      - name: Run gesture and tracking unit tests
         run: python -m unittest discover -s tests -v
       - name: Check CLI
         run: python -m airmouse --help
+
+  windows-dependencies:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.14', '3.15']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install current camera and mouse dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Verify imports and CLI
+        run: |
+          python -c "import cv2, mediapipe, pyautogui; assert hasattr(mediapipe, 'tasks'); print('MediaPipe Tasks import OK')"
+          python -m airmouse --help
